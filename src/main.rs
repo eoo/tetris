@@ -2,6 +2,9 @@ extern crate sdl3;
 
 use std::time::{Duration, SystemTime};
 use std::thread::sleep;
+use std::fs::File;
+use std::io::{self, Read, Write};
+
 use sdl3::pixels::Color;
 use sdl3::event::Event;
 use sdl3::keyboard::Keycode;
@@ -38,6 +41,19 @@ fn create_texture_rect<'a>(
         None
     }
 }
+
+fn write_into_file(content: &str, file_name: &str) -> io::Result<()> {
+    let mut f = File::create(file_name)?;
+    f.write_all(content.as_bytes())
+}
+
+fn read_from_file(file_name: &str) -> io::Result<String> {
+    let mut f = File::open(file_name)?;
+    let mut content = String::new();
+    f.read_to_string(&mut content)?;
+    Ok(content)
+}
+
 
 pub fn main() {
     let sdl_context = sdl3::init().expect("SDL initialization failed");
