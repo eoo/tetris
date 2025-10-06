@@ -1,13 +1,14 @@
 extern crate sdl3;
 
+use std::time::{Duration, SystemTime};
+use std::thread::sleep;
 use sdl3::pixels::Color;
 use sdl3::event::Event;
 use sdl3::keyboard::Keycode;
 use sdl3::rect::Rect;
 use sdl3::render::{Canvas, Texture, TextureCreator};
 use sdl3::video::{Window, WindowContext};
-use std::time::{Duration, SystemTime};
-use std::thread::sleep;
+use sdl3::image::LoadTexture;
 
 const TEXTURE_SIZE: u32 = 32;
 
@@ -58,6 +59,9 @@ pub fn main() {
     let blue_square = create_texture_rect(&mut canvas, &texture_creator, TextureColor::Blue, TEXTURE_SIZE)
         .expect("Could not create blue square texture");
 
+    let image_texture = texture_creator.load_texture("assets/space_nebula.png")
+        .expect("Could not load image texture");
+
     let mut event_pump = sdl_context.event_pump().expect("Could not get SDL event pump");
     let timer = SystemTime::now();
 
@@ -87,6 +91,8 @@ pub fn main() {
             Rect::new(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
         ).expect("Could not copy texture to canvas");
         
+        canvas.copy(&image_texture, None, None).expect("Could not copy image texture to canvas");
+
         canvas.present();
 
         sleep(Duration::new(0, 1_000_000_000u32 / 60));
