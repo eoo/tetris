@@ -65,6 +65,33 @@ fn save_highscore_and_lines(highscores: &[u32], number_of_lines: &[u32]) -> bool
     write_into_file(&format!("{}\n{}\n", s_highscores, s_number_of_lines), "highscores.txt").is_ok()
 }
 
+fn line_to_slice(line: &str) -> Vec<u32> {
+    line.split(" ")
+        .filter_map(|num| num.parse::<u32>().ok())
+        .collect()
+}
+
+fn load_highscores_and_lines() -> Option<(Vec<u32>, Vec<u32>)> {
+    if let Ok(content) = read_from_file("highscores.txt") {
+        let mut lines = 
+            content.splitn(2, "\n")
+            .map(|line| line_to_slice(line)).collect::<Vec<_>>();
+
+        if lines.len() == 2 {
+            let number_lines = lines.pop().unwrap();
+            let highscores = lines.pop().unwrap();
+            Some((highscores, number_lines))
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
+
+
+
 pub fn main() {
     let sdl_context = sdl3::init().expect("SDL initialization failed");
     let video_subsystem = sdl_context.video().expect("Could not get SDL video subsystem");
