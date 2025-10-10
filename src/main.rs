@@ -1,4 +1,5 @@
 extern crate sdl3;
+extern crate rand;
 
 use std::time::{Duration, SystemTime};
 use std::thread::sleep;
@@ -306,6 +307,28 @@ impl TetriminoGenerator for TetriminoT {
                 y: 0,
                 current_state: 0,
         }
+    }
+}
+
+fn create_new_tetrimino() -> Tetrimino {
+    static mut PREV: u8 = 7;
+    let mut rand_num = rand::random::<u8>() % 7;
+    
+    if unsafe { PREV } == rand_num {
+        rand_num = rand::random::<u8>() % 7;
+    }
+    
+    unsafe {PREV = rand_num; }
+
+    match rand_num {
+        0 => TetriminoI::new(),
+        1 => TetriminoL::new(),
+        2 => TetriminoJ::new(),
+        3 => TetriminoO::new(),
+        4 => TetriminoS::new(),
+        5 => TetriminoZ::new(),
+        6 => TetriminoT::new(),
+        _ => unreachable!(),
     }
 }
 

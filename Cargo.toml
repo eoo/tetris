@@ -4,6 +4,7 @@ version = "0.0.1"
 
 [dependencies]
 sdl3 = "0.15.1"
+rand = "0.9"
 
 [features]
 default = ["sdl3/image"]
