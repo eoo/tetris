@@ -6,6 +6,7 @@ use std::thread::sleep;
 use std::fs::File;
 use std::io::{self, Read, Write};
 
+use sdl3::libc::tm;
 use sdl3::pixels::Color;
 use sdl3::event::Event;
 use sdl3::keyboard::Keycode;
@@ -317,7 +318,7 @@ fn create_new_tetrimino() -> Tetrimino {
     if unsafe { PREV } == rand_num {
         rand_num = rand::random::<u8>() % 7;
     }
-    
+
     unsafe {PREV = rand_num; }
 
     match rand_num {
@@ -332,7 +333,50 @@ fn create_new_tetrimino() -> Tetrimino {
     }
 }
 
+impl Tetrimino {
+    fn rotate(&mut self, game_map: &[Vec<u8>]) -> bool{
+        let mut tmp_state = self.current_state + 1;
+        if tmp_state as usize >= self.states.len() {
+            tmp_state = 0;
+        }
 
+        let x_pos = [0, -1, 1, -2, 2, -3];
+        for &x in x_pos.iter() {
+            if self.test_position(game_map, tmp_state as usize, self.x + x, self.y) {
+                self.current_state = tmp_state;
+                self.x += x;
+                return true
+            }
+        }
+        false
+    }
+
+    fn test_position(
+        &self,
+        game_map: &[Vec<u8>],
+        tmp_state: usize,
+        x: isize,
+        y: usize,
+    ) -> bool {
+        for decal_y in 0..4 {
+            for decal_x in 0..4 {
+                let x = x + decal_x;
+                let y = y + decal_y;
+
+                if self.states[tmp_state][decal_y][decal_x as usize] != 0 
+                    && (
+                        y >= game_map.len() ||
+                        x < 0 ||
+                        x as usize >= game_map[y].len() ||
+                        game_map[y][x as usize] != 0
+                    ) {
+                        return false;
+                }
+            }
+        }
+        true
+    }
+}
 
 
 pub fn main() {
