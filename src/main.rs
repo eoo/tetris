@@ -351,6 +351,30 @@ impl Tetrimino {
         false
     }
 
+    fn change_position(&mut self, game_map: &[Vec<u8>], new_x: isize, new_y: usize) -> bool {
+        if self.test_position(
+            game_map, 
+            self.current_state as usize,
+            new_x,
+            new_y
+        ) == true {
+            self.x = new_x;
+            self.y = new_y;
+            true
+        } else {
+            false
+        }
+    }
+
+    fn test_current_position(&self, game_map: &[Vec<u8>]) -> bool {
+        self.test_position(
+            game_map,
+            self.current_state as usize,
+            self.x,
+            self.y
+        )
+    }
+
     fn test_position(
         &self,
         game_map: &[Vec<u8>],
