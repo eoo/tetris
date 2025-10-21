@@ -6,6 +6,7 @@ mod tetris;
 
 use crate::tetris::Tetris;
 
+use std::alloc::System;
 use std::time::{Duration, SystemTime};
 use std::thread::sleep;
 use std::fs::File;
@@ -103,7 +104,7 @@ fn handle_events(
     event_pump: &mut sdl3:: EventPump
 ) -> bool {
     let mut make_permanent = false;
-    
+
     let Some(ref mut tetrimino) = tetris.current_tetrimino else {
         return make_permanent;
     };
@@ -156,6 +157,13 @@ fn handle_events(
     make_permanent
 }
 
+fn print_game_information(tetris: &Tetris) {
+    println!("Game Over...");
+    println!("Score: {}", tetris.score);
+    // println!("Lines: {}", tetris.number_of_lines);
+    println!("Current Level: {}", tetris.current_level);
+    // chere highscore and update if needed
+}
 
 pub fn main() {
     let sdl_context = sdl3::init().expect("SDL initialization failed");
@@ -171,49 +179,53 @@ pub fn main() {
     
     let texture_creator = canvas.texture_creator();
     
-    let green_square = create_texture_rect(&mut canvas, &texture_creator, TextureColor::Green, TEXTURE_SIZE)
-        .expect("Could not create green square texture");
-
-    let blue_square = create_texture_rect(&mut canvas, &texture_creator, TextureColor::Blue, TEXTURE_SIZE)
-        .expect("Could not create blue square texture");
-
-    let image_texture = texture_creator.load_texture("assets/space_nebula.png")
-        .expect("Could not load image texture");
-
     let mut event_pump = sdl_context.event_pump().expect("Could not get SDL event pump");
-    let timer = SystemTime::now();
 
-    'running: loop {
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit {..} |
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                    break 'running
-                },
-                _ => {}
+    let mut tetris = Tetris::new();
+    let mut timer = SystemTime::now();
+    
+    loop {
+        if match timer.elapsed() {
+            Ok(elapsed) => elapsed.as_secs() >= 1,
+            Err(_) => false,
+        } {
+            let mut make_permanent = false;
+            if let Some(ref mut tetrimino) = tetris.current_tetrimino {
+                let x = tetrimino.x;
+                let y = tetrimino.y + 1;
+                make_permanent = !tetrimino.change_position(&tetris.game_map, x, y);
+            }
+            if make_permanent {
+                tetris.make_permanent();
+            }
+            timer = SystemTime::now();
+        }
+
+        // draw tetris grid here
+
+        if tetris.current_tetrimino.is_none() {
+            let current_tetrimino = tetris.create_new_tetrimino();
+            if !current_tetrimino.test_current_position(&tetris.game_map) {
+                print_game_information(&tetris);
+                break
+            }
+            tetris.current_tetrimino = Some(current_tetrimino);    
+        }
+
+        let mut quit = false;
+        if !handle_events(&mut tetris, &mut quit, &mut timer, &mut event_pump) {
+            if let Some(ref mut tetrimino) = tetris.current_tetrimino {
+               // Drawing code here
             }
         }
-        
-        canvas.set_draw_color(Color::RGB(216, 0, 0));
-        canvas.clear();
+        if quit {
+            print_game_information(&tetris);
+            break
+        }
 
-        let display_green = match timer.elapsed() {
-            Ok(elapsed) => elapsed.as_secs() % 2 == 0,
-            Err(_) => true
-        };
+        // Present the updated canvas
 
-        let square_texture = if display_green {&green_square} else {&blue_square};
-        canvas.copy(
-            square_texture,
-            None,
-            Rect::new(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
-        ).expect("Could not copy texture to canvas");
-        
-        canvas.copy(&image_texture, None, None).expect("Could not copy image texture to canvas");
-
-        canvas.present();
-
-        sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        sleep(Duration::new(0, 1_000_000u32 / 60));
     }
 
 }
