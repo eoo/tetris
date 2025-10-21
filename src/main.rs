@@ -4,6 +4,8 @@ extern crate rand;
 mod tetrimino;
 mod tetris;
 
+use crate::tetris::Tetris;
+
 use std::time::{Duration, SystemTime};
 use std::thread::sleep;
 use std::fs::File;
@@ -94,6 +96,65 @@ fn load_highscores_and_lines() -> Option<(Vec<u32>, Vec<u32>)> {
     }
 }
 
+fn handle_events(
+    tetris: &mut Tetris,
+    quit: &mut bool,
+    timer: &mut SystemTime,
+    event_pump: &mut sdl3:: EventPump
+) -> bool {
+    let mut make_permanent = false;
+    
+    let Some(ref mut tetrimino) = tetris.current_tetrimino else {
+        return make_permanent;
+    };
+
+    let mut tmp_x = tetrimino.x;
+    let mut tmp_y = tetrimino.y;
+
+    for event in event_pump.poll_iter() {
+        match event {
+            Event::Quit { .. } | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                *quit = true;
+                break;
+            },
+            Event::KeyDown { keycode: Some(Keycode::Down), .. } => {
+                *timer = SystemTime::now();
+                tmp_y += 1;
+            },
+            Event::KeyDown { keycode: Some(Keycode::Left), .. } => {
+                tmp_x -= 1;
+            },
+            Event::KeyDown { keycode: Some(Keycode::Right), .. } => {
+                tmp_x += 1;
+            },
+            Event::KeyDown { keycode: Some(Keycode::Up), .. } => {
+                tetrimino.rotate(&tetris.game_map);
+            },
+            Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
+                let x = tetrimino.x;
+                let mut y = tetrimino.y;
+
+                while tetrimino.change_position(&tetris.game_map, x, y + 1) == true {
+                    y += 1;
+                }
+                make_permanent = true;
+            },
+            _ => {}
+        }
+    }
+    
+    if !make_permanent {
+        if tetrimino.change_position(&tetris.game_map, tmp_x, tmp_y) == false && tmp_y != tetrimino.y {
+            make_permanent = true;
+        }
+    }
+
+    if make_permanent {
+        tetris.make_permanent();
+        *timer = SystemTime::now();
+    }
+    make_permanent
+}
 
 
 pub fn main() {
