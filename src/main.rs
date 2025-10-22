@@ -51,7 +51,7 @@ fn create_texture_rect<'a>(
     }
 }
 
-fn update_highscore_vec(v: &mut Vec<u32>, value: u32) -> bool {
+fn update_vec(v: &mut Vec<u32>, value: u32) -> bool {
     if v.len() < NUM_HIGHSCORES {
         v.push(value);
         v.sort();
@@ -176,11 +176,30 @@ fn handle_events(
 }
 
 fn print_game_information(tetris: &Tetris) {
+    let mut new_highest_highscore = true;
+    let mut new_highest_lines_sent = true;
+
+    if let Some((mut highscores, mut lines_sent)) = load_highscores_and_lines() {
+        new_highest_highscore = update_vec(&mut highscores, tetris.score);
+        new_highest_lines_sent = update_vec(&mut lines_sent, tetris.number_of_lines);
+        
+        if new_highest_highscore || new_highest_lines_sent {
+            save_highscore_and_lines(&highscores, &lines_sent);
+        }
+    } else {
+        save_highscore_and_lines(&[tetris.score], &[tetris.number_of_lines]);
+    }
+
     println!("Game Over...");
-    println!("Score: {}", tetris.score);
-    // println!("Lines: {}", tetris.number_of_lines);
+    println!("Score:            {}{}",
+            tetris.score,
+            if new_highest_highscore { " (New Highscore!)" } else { "" }
+        );
+    println!("Number of Lines:  {}{}",
+            tetris.number_of_lines,
+            if new_highest_lines_sent { " (New Highscore!)" } else { "" }
+        );
     println!("Current Level: {}", tetris.current_level);
-    // chere highscore and update if needed
 }
 
 fn is_time_over(tetris: &Tetris, timer: &SystemTime) -> bool {
