@@ -23,6 +23,8 @@ use sdl3::image::LoadTexture;
 
 const TEXTURE_SIZE: u32 = 32;
 const NUM_HIGHSCORES: usize = 5;
+const TETRIS_HEIGHT: usize = 40;
+const HIGHSCORE_FILE: &'static str = "scores.txt";
 
 #[derive(Clone, Copy)]
 enum TextureColor {
@@ -88,7 +90,7 @@ fn save_highscore_and_lines(highscores: &[u32], number_of_lines: &[u32]) -> bool
     let s_highscores = slice_to_string(highscores);
     let s_number_of_lines = slice_to_string(number_of_lines);
 
-    write_into_file(&format!("{}\n{}\n", s_highscores, s_number_of_lines), "highscores.txt").is_ok()
+    write_into_file(&format!("{}\n{}\n", s_highscores, s_number_of_lines), HIGHSCORE_FILE).is_ok()
 }
 
 fn line_to_slice(line: &str) -> Vec<u32> {
@@ -98,7 +100,7 @@ fn line_to_slice(line: &str) -> Vec<u32> {
 }
 
 fn load_highscores_and_lines() -> Option<(Vec<u32>, Vec<u32>)> {
-    if let Ok(content) = read_from_file("highscores.txt") {
+    if let Ok(content) = read_from_file(HIGHSCORE_FILE) {
         let mut lines = 
             content.splitn(2, "\n")
             .map(|line| line_to_slice(line)).collect::<Vec<_>>();
@@ -231,8 +233,8 @@ pub fn main() {
     let mut tetris = Tetris::new();
     let mut timer = SystemTime::now();
 
-    let grid_x = (width - TETRIS_HEIGHT as u32 * 10) as i32 / 2;
-    let grid_y = (height - TETRIS_HEIGHT as u32 * 16) as i32 / 2;
+    // let grid_x = (width - TETRIS_HEIGHT as u32 * 10) as i32 / 2;
+    // let grid_y = (height - TETRIS_HEIGHT as u32 * 16) as i32 / 2;
     
     loop {
         if is_time_over(&tetris, &timer) {
