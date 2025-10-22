@@ -1,10 +1,12 @@
+use std::f32::consts::E;
+
 use crate::tetrimino::{
     Tetrimino, TetriminoGenerator, TetriminoI, TetriminoJ, TetriminoL,
     TetriminoO, TetriminoS, TetriminoT, TetriminoZ,
 };
 
-const LEVEL_TIMES: [u32; 10] = [1000, 850, 700, 600, 500, 400, 300, 250, 221, 190];
-const LEVEL_LINES: [u32; 10] = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200];
+pub const LEVEL_TIMES: [u32; 10] = [1000, 850, 700, 600, 500, 400, 300, 250, 221, 190];
+pub const LEVEL_LINES: [u32; 10] = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200];
 
 
 pub struct Tetris {
@@ -122,13 +124,16 @@ impl Tetris {
         self.score += to_add;
     }
 
+    fn increase_level(&mut self) {
+        self.current_level += 1;
+    }
+
     fn increase_line(&mut self) {
         self.number_of_lines += 1;
 
         if self.number_of_lines >= LEVEL_LINES[self.current_level as usize - 1] {
-            self.current_level += 1;
+            self.increase_level();
         }
     }
 
-    
 }

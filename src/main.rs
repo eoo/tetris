@@ -165,30 +165,40 @@ fn print_game_information(tetris: &Tetris) {
     // chere highscore and update if needed
 }
 
+fn is_time_over(tetris: &Tetris, timer: &SystemTime) -> bool {
+    match timer.elapsed() {
+        Ok(elapsed) => {
+            let millis = elapsed.as_millis() as u32 + elapsed.subsec_millis();
+            millis > tetris::LEVEL_TIMES[tetris.current_level as usize - 1]
+        },
+        Err(_) => false
+    }
+}
+
 pub fn main() {
     let sdl_context = sdl3::init().expect("SDL initialization failed");
-    let video_subsystem = sdl_context.video().expect("Could not get SDL video subsystem");
+    // let video_subsystem = sdl_context.video().expect("Could not get SDL video subsystem");
 
-    let window = video_subsystem.window("Tetris", 800, 600)
-        .position_centered()
-        .opengl()
-        .build()
-        .expect("Could not create window");
+    // let window = video_subsystem.window("Tetris", 800, 600)
+    //     .position_centered()
+    //     .opengl()
+    //     .build()
+    //     .expect("Could not create window");
     
-    let mut canvas = window.into_canvas();
+    // let mut canvas = window.into_canvas();
     
-    let texture_creator = canvas.texture_creator();
+    // let texture_creator = canvas.texture_creator();
     
     let mut event_pump = sdl_context.event_pump().expect("Could not get SDL event pump");
 
     let mut tetris = Tetris::new();
     let mut timer = SystemTime::now();
+
+    let grid_x = (width - TETRIS_HEIGHT as u32 * 10) as i32 / 2;
+    let grid_y = (height - TETRIS_HEIGHT as u32 * 16) as i32 / 2;
     
     loop {
-        if match timer.elapsed() {
-            Ok(elapsed) => elapsed.as_secs() >= 1,
-            Err(_) => false,
-        } {
+        if is_time_over(&tetris, &timer) {
             let mut make_permanent = false;
             if let Some(ref mut tetrimino) = tetris.current_tetrimino {
                 let x = tetrimino.x;
