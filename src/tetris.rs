@@ -3,6 +3,10 @@ use crate::tetrimino::{
     TetriminoO, TetriminoS, TetriminoT, TetriminoZ,
 };
 
+const LEVEL_TIMES: [u32; 10] = [1000, 850, 700, 600, 500, 400, 300, 250, 221, 190];
+const LEVEL_LINES: [u32; 10] = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200];
+
+
 pub struct Tetris {
     pub game_map: Vec<Vec<u8>>,
     pub current_level: u32,
@@ -51,9 +55,11 @@ impl Tetris {
 
     fn check_lines(&mut self) {
         let mut y = 0;
+        let mut score_add = 0;
 
         while y < self.game_map.len() {
             let mut complete = true;
+
             for &x in &self.game_map[y] {
                 if x == 0 {
                     complete = false;
@@ -62,6 +68,7 @@ impl Tetris {
             }
 
             if complete == true {
+                score_add += self.current_level;
                 self.game_map.remove(y);
                 y -= 1;
                 // increase the number of self.lines
@@ -70,7 +77,15 @@ impl Tetris {
             y += 1;
         }
 
+        if self.game_map.len() == 0 {
+            // A "Tetris"!
+            score_add += 1000;
+        }
+        
+        self.update_score(score_add);
+
         while self.game_map.len() < 16 {
+            self.increase_line();
             self.game_map.insert(0, vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
         }
     }
@@ -98,7 +113,22 @@ impl Tetris {
             shift_y += 1;
         }
 
+        self.update_score(self.current_level);
         self.check_lines();
         self.current_tetrimino = None;
     }
+
+    fn update_score(&mut self, to_add: u32) {
+        self.score += to_add;
+    }
+
+    fn increase_line(&mut self) {
+        self.number_of_lines += 1;
+
+        if self.number_of_lines >= LEVEL_LINES[self.current_level as usize - 1] {
+            self.current_level += 1;
+        }
+    }
+
+    
 }
