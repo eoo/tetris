@@ -22,6 +22,7 @@ use sdl3::video::{Window, WindowContext};
 use sdl3::image::LoadTexture;
 
 const TEXTURE_SIZE: u32 = 32;
+const NUM_HIGHSCORES: usize = 5;
 
 #[derive(Clone, Copy)]
 enum TextureColor {
@@ -47,6 +48,23 @@ fn create_texture_rect<'a>(
         Some(square_texture)
     } else {
         None
+    }
+}
+
+fn update_highscore_vec(v: &mut Vec<u32>, value: u32) -> bool {
+    if v.len() < NUM_HIGHSCORES {
+        v.push(value);
+        v.sort();
+        true
+    } else {
+        for entry in v.iter_mut() {
+            if value > *entry {
+                *entry = value;
+                v.sort();
+                return true;    
+            }
+        }
+        false
     }
 }
 
