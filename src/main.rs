@@ -32,7 +32,7 @@ enum TextureColor {
     Blue,
     Black,
     White,
-    from_rgb(u8, u8, u8)
+    FromRGB(u8, u8, u8)
 }
 
 
@@ -44,18 +44,18 @@ fn create_texture_rect<'a>(
     height: u32
 ) -> Option<Texture<'a>> {
 
-    if let Ok(mut square_texture) = texture_creator.create_texture_target(None, width, height) {
-        canvas.with_texture_canvas(&mut square_texture, |texture| {
+    if let Ok(mut rect_texture) = texture_creator.create_texture_target(None, width, height) {
+        canvas.with_texture_canvas(&mut rect_texture, |texture| {
             match color {
                 TextureColor::Green => texture.set_draw_color(Color::RGB(0, 255, 0)),
                 TextureColor::Blue => texture.set_draw_color(Color::RGB(0, 0, 255)),
                 TextureColor::Black => texture.set_draw_color(Color::RGB(0, 0, 0)),
                 TextureColor::White => texture.set_draw_color(Color::RGB(255, 255, 255)),
-                TextureColor::from_rgb(r, g, b) => texture.set_draw_color(Color::RGB(r, g, b))
+                TextureColor::FromRGB(r, g, b) => texture.set_draw_color(Color::RGB(r, g, b))
             }
             texture.clear();
         }).expect("Failed to color a texture");
-        Some(square_texture)
+        Some(rect_texture)
     } else {
         None
     }
@@ -225,11 +225,11 @@ fn is_time_over(tetris: &Tetris, timer: &SystemTime) -> bool {
 pub fn main() {
     let sdl_context = sdl3::init().expect("SDL initialization failed");
     let video_subsystem = sdl_context.video().expect("Could not get SDL video subsystem");
+    let mut event_pump = sdl_context.event_pump().expect("Could not get SDL event pump");
+
     let width = 600;
     let height = 800;
     
-    let mut event_pump = sdl_context.event_pump().expect("Could not get SDL event pump");
-
     let mut tetris = Tetris::new();
     let mut timer = SystemTime::now();
 
@@ -242,8 +242,7 @@ pub fn main() {
         .build()
         .expect("Could not create window");
     
-    let mut canvas = window.into_canvas().present()
-        .expect("Could not get window's canvas");
+    let mut canvas = window.into_canvas();
     
     let texture_creator = canvas.texture_creator();
 
@@ -265,15 +264,15 @@ pub fn main() {
     
 
     macro_rules! texture {
-        ($r:expr, $g:expr, $b:expr) => (
+        ($r:expr, $g:expr, $b:expr) => {
             create_texture_rect(
                 &mut canvas,
                 &texture_creator,
-                TextureColor::from_rgb($r, $g, $b),
+                TextureColor::FromRGB($r, $g, $b),
                 TETRIS_HEIGHT as u32,
                 TETRIS_HEIGHT as u32
             ).unwrap()
-        )
+        }
     }
 
     let textures = [
@@ -300,7 +299,26 @@ pub fn main() {
             timer = SystemTime::now();
         }
 
-        // draw tetris grid here
+        canvas.set_draw_color(Color::RGB(255, 0, 0));
+        canvas.clear();
+        canvas.copy(
+            &border, 
+            None, 
+            Rect::new(
+                (width - TETRIS_HEIGHT as u32) as i32 * 10 / 2 - 10, 
+                (height - TETRIS_HEIGHT as u32 * 16) as i32 / 2 - 10, 
+                TETRIS_HEIGHT as u32 * 10 + 20, 
+                TETRIS_HEIGHT as u32 * 16 + 20)
+        ).expect("Could not draw border");
+        canvas.copy(
+            &grid, 
+            None, 
+            Rect::new(
+                grid_x, 
+                grid_y, 
+                TETRIS_HEIGHT as u32 * 10, 
+                TETRIS_HEIGHT as u32 * 16)
+        ).expect("Could not draw grid");
 
         if tetris.current_tetrimino.is_none() {
             let current_tetrimino = tetris.create_new_tetrimino();
