@@ -332,8 +332,40 @@ pub fn main() {
         let mut quit = false;
         if !handle_events(&mut tetris, &mut quit, &mut timer, &mut event_pump) {
             if let Some(ref mut tetrimino) = tetris.current_tetrimino {
-               // Drawing code here
+                for (line_nb, line) in tetrimino.states[tetrimino.current_state as usize].iter().enumerate() {
+                    for (case_nb, case) in line.iter().enumerate() {
+                        if *case == 0 { continue }
+                        canvas.copy(
+                            &textures[*case as usize - 1],
+                            None,
+                            Rect::new(
+                                grid_x + (tetrimino.x + case_nb as isize) as i32 * TETRIS_HEIGHT as i32,
+                                grid_y + (tetrimino.y + line_nb) as i32 * TETRIS_HEIGHT as i32,
+                                TETRIS_HEIGHT as u32,
+                                TETRIS_HEIGHT as u32
+                            )
+                        ).expect("Couldn't copy texture into window");
+                    }
+                }
             }
+
+            for (line_nb, line) in tetris.game_map.iter().enumerate() {
+                for (case_nb, case) in line.iter().enumerate() {
+                    if *case == 0 { continue }
+                    canvas.copy(
+                        &textures[*case as usize - 1],
+                        None,
+                        Rect::new(
+                            grid_x + case_nb as i32 * TETRIS_HEIGHT as i32,
+                            grid_y + line_nb as i32 * TETRIS_HEIGHT as i32,
+                            TETRIS_HEIGHT as u32,
+                            TETRIS_HEIGHT as u32
+                        )
+                    ).expect("Couldn't copy texture into window");
+                }
+            }
+            canvas.present();
+            
         }
         if quit {
             print_game_information(&tetris);
